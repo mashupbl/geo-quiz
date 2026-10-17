@@ -1,0 +1,176 @@
+{
+  "entities": {
+    "Question": {
+      "title": "Question",
+      "description": "A geography multiple-choice question in the dynamic question bank.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique Question ID (e.g. GEO-AFR-001)",
+          "maxLength": 128
+        },
+        "continent": {
+          "type": "string",
+          "description": "Continent category of the question",
+          "enum": ["Africa", "Asia", "Europe", "North America", "Oceania", "South America", "Antarctica"]
+        },
+        "topic": {
+          "type": "string",
+          "description": "Sub-topic (e.g. Physical Geography, Capitals, Rivers & Lakes, Climate & Biomes, Borders & Territories, Landmarks)",
+          "maxLength": 100
+        },
+        "difficulty": {
+          "type": "string",
+          "description": "Difficulty level of the question",
+          "enum": ["easy", "medium", "hard"]
+        },
+        "questionText": {
+          "type": "string",
+          "description": "The MCQ prompt",
+          "maxLength": 2000
+        },
+        "options": {
+          "type": "array",
+          "description": "Exactly four answer options"
+        },
+        "correctAnswer": {
+          "type": "string",
+          "description": "The exact correct answer matching one of the options",
+          "maxLength": 500
+        },
+        "explanation": {
+          "type": "string",
+          "description": "Educational explanation for the correct answer",
+          "maxLength": 3000
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "Optional illustration, map, or flag image URL",
+          "maxLength": 2000
+        },
+        "status": {
+          "type": "string",
+          "description": "Lifecycle status",
+          "enum": ["draft", "published", "archived"]
+        },
+        "source": {
+          "type": "string",
+          "description": "Source origin of the question",
+          "enum": ["manual", "ai_generated", "sheet_sync", "seed"]
+        },
+        "reviewFlag": {
+          "type": "string",
+          "description": "Flag for AI generated questions needing review",
+          "maxLength": 200
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp or server timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp or server timestamp"
+        },
+        "publishedAt": {
+          "type": "string",
+          "description": "ISO timestamp when published"
+        }
+      },
+      "required": ["id", "continent", "topic", "difficulty", "questionText", "options", "correctAnswer", "status"]
+    },
+    "QuestionAggregates": {
+      "title": "QuestionAggregates",
+      "description": "Aggregated counts and metrics for continents, topics, and difficulties",
+      "type": "object",
+      "properties": {
+        "totalPublished": {
+          "type": "number",
+          "description": "Total count of currently published questions"
+        },
+        "totalDraft": {
+          "type": "number",
+          "description": "Total count of draft questions"
+        },
+        "totalArchived": {
+          "type": "number",
+          "description": "Total count of archived questions"
+        },
+        "lastSyncedAt": {
+          "type": "string",
+          "description": "Timestamp of the last question bank sync or update"
+        },
+        "byContinent": {
+          "type": "object",
+          "description": "Breakdown per continent of total, difficulties, and topics"
+        }
+      },
+      "required": ["totalPublished", "lastSyncedAt"]
+    },
+    "QuizAttempt": {
+      "title": "QuizAttempt",
+      "description": "Immutable historical audit record of a student quiz attempt with snapshot questions",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Attempt unique ID",
+          "maxLength": 128
+        },
+        "studentId": {
+          "type": "string",
+          "description": "Student UID or anonymous guest identifier",
+          "maxLength": 128
+        },
+        "studentName": {
+          "type": "string",
+          "description": "Student display name",
+          "maxLength": 100
+        },
+        "startedAt": {
+          "type": "string",
+          "description": "When the quiz began"
+        },
+        "completedAt": {
+          "type": "string",
+          "description": "When the quiz was submitted"
+        },
+        "category": {
+          "type": "object",
+          "description": "Category settings used to generate the quiz (continent, topic, difficulty)"
+        },
+        "score": {
+          "type": "number",
+          "description": "Number of correct answers"
+        },
+        "totalQuestions": {
+          "type": "number",
+          "description": "Total questions served in this attempt"
+        },
+        "percentage": {
+          "type": "number",
+          "description": "Percentage score (0 - 100)"
+        },
+        "questions": {
+          "type": "array",
+          "description": "Immutable snapshot list of questions, shuffled options, user choice, and correctness"
+        }
+      },
+      "required": ["id", "studentId", "score", "totalQuestions", "questions"]
+    }
+  },
+  "firestore": {
+    "/questions/{questionId}": {
+      "schema": "Question",
+      "description": "MCQ Question documents stored by question ID"
+    },
+    "/question_metadata/{metaId}": {
+      "schema": "QuestionAggregates",
+      "description": "Aggregated cache of question count metrics and synchronization times"
+    },
+    "/quiz_attempts/{attemptId}": {
+      "schema": "QuizAttempt",
+      "description": "Immutable historical student attempt snapshots"
+    }
+  }
+}

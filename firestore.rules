@@ -1,0 +1,62 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Security Primitives
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-\\.:]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    // Question Validation
+    function isValidQuestion(data) {
+      return data.id is string && data.id.size() <= 128
+        && data.continent is string && data.continent in ['Africa', 'Asia', 'Europe', 'North America', 'Oceania', 'South America', 'Antarctica']
+        && data.topic is string && data.topic.size() <= 100
+        && data.difficulty is string && data.difficulty in ['easy', 'medium', 'hard']
+        && data.questionText is string && data.questionText.size() > 0 && data.questionText.size() <= 2000
+        && data.options is list && data.options.size() == 4
+        && data.correctAnswer is string && data.correctAnswer.size() > 0 && data.correctAnswer.size() <= 500
+        && data.status is string && data.status in ['draft', 'published', 'archived']
+        && (!('explanation' in data) || (data.explanation is string && data.explanation.size() <= 3000))
+        && (!('imageUrl' in data) || data.imageUrl == null || (data.imageUrl is string && data.imageUrl.size() <= 2000));
+    }
+
+    // Quiz Attempt Validation
+    function isValidQuizAttempt(data) {
+      return data.id is string && data.id.size() <= 128
+        && data.score is number && data.score >= 0
+        && data.totalQuestions is number && data.totalQuestions > 0 && data.score <= data.totalQuestions
+        && data.questions is list && data.questions.size() > 0 && data.questions.size() <= 100;
+    }
+
+    // Questions Collection
+    match /questions/{questionId} {
+      allow get: if isValidId(questionId);
+      allow list: if true;
+      allow create: if isValidId(questionId) && isValidQuestion(incoming());
+      allow update: if isValidId(questionId) && isValidQuestion(incoming());
+      allow delete: if isValidId(questionId);
+    }
+
+    // Aggregates Metadata
+    match /question_metadata/{metaId} {
+      allow get: if isValidId(metaId);
+      allow list: if true;
+      allow create, update: if isValidId(metaId);
+      allow delete: if false;
+    }
+
+    // Historical Quiz Attempts (Frozen Audit Trail)
+    match /quiz_attempts/{attemptId} {
+      allow create: if isValidId(attemptId) && isValidQuizAttempt(incoming());
+      allow get: if isValidId(attemptId);
+      allow list: if true;
+      // Strictly immutable: Attempts can NEVER be edited or deleted once submitted
+      allow update, delete: if false;
+    }
+  }
+}

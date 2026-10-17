@@ -1,0 +1,6 @@
+{
+  "name": "GeoMaster - Dynamic Geography Question Bank & Quiz Engine",
+  "description": "Expandable geography MCQ question bank and dynamic quiz engine with real-time Firestore sync, category breakdown, AI question generation, and historical attempt preservation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
